@@ -11,7 +11,7 @@ MODEL_ID = "claude-3-5-sonnet@20240620"
 
 @st.cache_resource
 def get_client():
-    # بنقرأ المفتاح من الخزنة (Secrets) مباشرة
+    # بنقرأ من الخزنة (Secrets) بدل الملف
     if "gcp_service_account" in st.secrets:
         creds = dict(st.secrets["gcp_service_account"])
         os.environ["GOOGLE_APPLICATION_CREDENTIALS_JSON"] = json.dumps(creds)
