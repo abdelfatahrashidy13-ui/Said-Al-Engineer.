@@ -2,7 +2,6 @@ import gc
 import html
 import json
 import os
-import re
 import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
@@ -25,33 +24,40 @@ st.markdown(
 <style>
     .stApp { background: #0f0f0f; color: #ececec; }
     #MainMenu, footer, header { visibility: hidden; }
+
     section[data-testid="stSidebar"] {
         background: #171717;
         border-right: 1px solid #2a2a2a;
     }
+
     .block-container {
         padding-top: 1rem;
         padding-bottom: 6rem;
         max-width: 1200px;
     }
+
     .app-title {
         font-size: 2rem;
         font-weight: 700;
         margin-bottom: 0.1rem;
     }
+
     .app-subtitle {
         color: #a0a0a0;
         margin-bottom: 1rem;
     }
+
     .stChatMessage {
         border: none !important;
         background: transparent !important;
         padding: 0 !important;
     }
+
     .chat-wrap {
         max-width: 920px;
         margin: 0 auto;
     }
+
     .msg-row {
         display: flex;
         width: 100%;
@@ -59,15 +65,21 @@ st.markdown(
         gap: 10px;
         align-items: flex-start;
     }
+
     .msg-row.user { justify-content: flex-end; }
     .msg-row.assistant { justify-content: flex-start; }
+
     .msg-card {
         display: flex;
         gap: 10px;
         align-items: flex-start;
         max-width: 86%;
     }
-    .msg-row.user .msg-card { flex-direction: row-reverse; }
+
+    .msg-row.user .msg-card {
+        flex-direction: row-reverse;
+    }
+
     .avatar {
         width: 34px;
         height: 34px;
@@ -80,21 +92,26 @@ st.markdown(
         background: #1f2937;
         border: 1px solid #374151;
     }
+
     .avatar.user {
         background: #1d4ed8;
         border-color: #2563eb;
     }
+
     .avatar.assistant {
         background: #111827;
         border-color: #374151;
     }
+
     .msg-bubble-wrap { width: 100%; }
+
     .msg-label {
         font-size: 12px;
         color: #9ca3af;
         margin-bottom: 6px;
         padding: 0 4px;
     }
+
     .msg-bubble {
         padding: 14px 16px;
         border-radius: 18px;
@@ -103,17 +120,20 @@ st.markdown(
         word-break: break-word;
         white-space: pre-wrap;
     }
+
     .msg-user {
         background: #343541;
         color: #f3f3f3;
         border-bottom-right-radius: 6px;
     }
+
     .msg-assistant {
         background: #1f1f1f;
         color: #f3f3f3;
         border-bottom-left-radius: 6px;
         border: 1px solid #2b2b2b;
     }
+
     .mode-badge {
         display: inline-block;
         padding: 6px 10px;
@@ -124,6 +144,7 @@ st.markdown(
         margin-bottom: 12px;
         border: 1px solid #334155;
     }
+
     .pdf-badge {
         display: inline-block;
         padding: 6px 10px;
@@ -134,6 +155,7 @@ st.markdown(
         margin-bottom: 10px;
         border: 1px solid #7c2d12;
     }
+
     .stChatInputContainer {
         background: rgba(15,15,15,0.94) !important;
         backdrop-filter: blur(8px);
@@ -141,12 +163,14 @@ st.markdown(
         padding-top: 10px !important;
         padding-bottom: 10px !important;
     }
+
     textarea {
         background: #1c1c1c !important;
         color: #f3f3f3 !important;
         border: 1px solid #303030 !important;
         border-radius: 14px !important;
     }
+
     .stButton > button, .stDownloadButton > button {
         border-radius: 12px !important;
     }
@@ -176,6 +200,7 @@ def extract_pdf_text(uploaded_file) -> str:
                 pages.append(page.extract_text() or "")
             except Exception:
                 continue
+
         full_text = "\n\n".join(pages).strip()
         return full_text[:MAX_PDF_CHARS] if full_text else ""
     except Exception:
@@ -275,12 +300,12 @@ def delete_chat(chat_id):
     return False
 
 
-def write_service_account_to_tempfile():
+def write_service_account_to_tempfile() -> str | None:
     if "gcp_service_account" not in st.secrets:
         return None
 
-    raw_secret = st.secrets["gcp_service_account"]
-    creds = json.loads(raw_secret)
+    # الحل هنا: نحول AttrDict إلى dict عادي
+    creds = dict(st.secrets["gcp_service_account"])
 
     with tempfile.NamedTemporaryFile(
         mode="w",
@@ -296,6 +321,7 @@ def build_client(project_id: str, region: str):
     cred_path = write_service_account_to_tempfile()
     if cred_path:
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = cred_path
+
     return AnthropicVertex(project_id=project_id, region=region)
 
 
@@ -680,4 +706,4 @@ if prompt:
     st.session_state.current_chat_id = save_chat(
         st.session_state.messages,
         st.session_state.current_chat_id,
-    )
+)
