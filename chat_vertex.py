@@ -2,37 +2,39 @@ import streamlit as st
 from anthropic import AnthropicVertex
 import os
 import gc
+import json
 
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="Said AI | Engineer", page_icon="🏗️")
 
-# 2. بيانات المشروع
+# 2. بيانات المشروع (بنجيبها من الـ Secrets)
 PROJECT_ID = "gemini-projectsaid01"
 REGION = "us-central1"
 MODEL_ID = "claude-3-5-sonnet@20240620"
 
-# 3. الربط بالمفتاح والـ Client
+# 3. وظيفة بناء الـ Client بدون ملف خارجي
 @st.cache_resource
 def get_client():
-    if os.path.exists("key.json"):
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "key.json"
-    # التعديل هنا: استخدام project_id ليتوافق مع النسخة الجديدة
+    # بنقرأ بيانات المفتاح من إعدادات الموقع السرية
+    if "gcp_service_account" in st.secrets:
+        creds = dict(st.secrets["gcp_service_account"])
+        # ده بيخلي الكود يشتغل من الذاكرة بدل الملف
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS_JSON"] = json.dumps(creds)
+    
     return AnthropicVertex(project_id=PROJECT_ID, region=REGION)
 
 # 4. واجهة المستخدم
 st.title("🏗️ مساعد المهندس سعيد رشيدي")
-st.caption("Claude 3.5 Sonnet | جاهز للعمل")
+st.caption("Claude 3.5 Sonnet | نسخة المهندس الاستشاري")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# عرض المحادثة
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]): 
         st.markdown(msg["content"])
 
-# استقبال السؤال
-if prompt := st.chat_input("اسألني أي سؤال هندسي يا بشمهندس..."):
+if prompt := st.chat_input("اسألني أي سؤال هندسي..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): 
         st.markdown(prompt)
