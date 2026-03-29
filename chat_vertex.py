@@ -23,48 +23,35 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    .stApp {
-        background: #0f0f0f;
-        color: #ececec;
-    }
-
-    #MainMenu, footer, header {
-        visibility: hidden;
-    }
-
+    .stApp { background: #0f0f0f; color: #ececec; }
+    #MainMenu, footer, header { visibility: hidden; }
     section[data-testid="stSidebar"] {
         background: #171717;
         border-right: 1px solid #2a2a2a;
     }
-
     .block-container {
         padding-top: 1rem;
         padding-bottom: 6rem;
         max-width: 1200px;
     }
-
     .app-title {
         font-size: 2rem;
         font-weight: 700;
         margin-bottom: 0.1rem;
     }
-
     .app-subtitle {
         color: #a0a0a0;
         margin-bottom: 1rem;
     }
-
     .stChatMessage {
         border: none !important;
         background: transparent !important;
         padding: 0 !important;
     }
-
     .chat-wrap {
         max-width: 920px;
         margin: 0 auto;
     }
-
     .msg-row {
         display: flex;
         width: 100%;
@@ -72,26 +59,15 @@ st.markdown(
         gap: 10px;
         align-items: flex-start;
     }
-
-    .msg-row.user {
-        justify-content: flex-end;
-    }
-
-    .msg-row.assistant {
-        justify-content: flex-start;
-    }
-
+    .msg-row.user { justify-content: flex-end; }
+    .msg-row.assistant { justify-content: flex-start; }
     .msg-card {
         display: flex;
         gap: 10px;
         align-items: flex-start;
         max-width: 86%;
     }
-
-    .msg-row.user .msg-card {
-        flex-direction: row-reverse;
-    }
-
+    .msg-row.user .msg-card { flex-direction: row-reverse; }
     .avatar {
         width: 34px;
         height: 34px;
@@ -103,53 +79,41 @@ st.markdown(
         font-size: 18px;
         background: #1f2937;
         border: 1px solid #374151;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.18);
     }
-
     .avatar.user {
         background: #1d4ed8;
         border-color: #2563eb;
     }
-
     .avatar.assistant {
         background: #111827;
         border-color: #374151;
     }
-
-    .msg-bubble-wrap {
-        width: 100%;
-    }
-
+    .msg-bubble-wrap { width: 100%; }
     .msg-label {
         font-size: 12px;
         color: #9ca3af;
         margin-bottom: 6px;
         padding: 0 4px;
     }
-
     .msg-bubble {
         padding: 14px 16px;
         border-radius: 18px;
         line-height: 1.75;
         font-size: 15px;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.18);
         word-break: break-word;
         white-space: pre-wrap;
     }
-
     .msg-user {
         background: #343541;
         color: #f3f3f3;
         border-bottom-right-radius: 6px;
     }
-
     .msg-assistant {
         background: #1f1f1f;
         color: #f3f3f3;
         border-bottom-left-radius: 6px;
         border: 1px solid #2b2b2b;
     }
-
     .mode-badge {
         display: inline-block;
         padding: 6px 10px;
@@ -160,7 +124,6 @@ st.markdown(
         margin-bottom: 12px;
         border: 1px solid #334155;
     }
-
     .pdf-badge {
         display: inline-block;
         padding: 6px 10px;
@@ -171,7 +134,6 @@ st.markdown(
         margin-bottom: 10px;
         border: 1px solid #7c2d12;
     }
-
     .stChatInputContainer {
         background: rgba(15,15,15,0.94) !important;
         backdrop-filter: blur(8px);
@@ -179,39 +141,14 @@ st.markdown(
         padding-top: 10px !important;
         padding-bottom: 10px !important;
     }
-
     textarea {
         background: #1c1c1c !important;
         color: #f3f3f3 !important;
         border: 1px solid #303030 !important;
         border-radius: 14px !important;
     }
-
-    textarea:focus {
-        border: 1px solid #4b5563 !important;
-        box-shadow: none !important;
-    }
-
     .stButton > button, .stDownloadButton > button {
         border-radius: 12px !important;
-    }
-
-    div[data-testid="stTabs"] button {
-        border-radius: 10px !important;
-    }
-
-    ::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: #3a3a3a;
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: #141414;
     }
 </style>
 """,
@@ -228,11 +165,6 @@ MAX_PDF_CHARS = 12000
 
 def safe_text(text: str) -> str:
     return html.escape(text)
-
-
-def normalize_key(text: str) -> str:
-    text = re.sub(r"[^a-zA-Z0-9_]+", "_", text)
-    return text.strip("_").lower() or "msg"
 
 
 def extract_pdf_text(uploaded_file) -> str:
@@ -347,7 +279,9 @@ def write_service_account_to_tempfile():
     if "gcp_service_account" not in st.secrets:
         return None
 
-    creds = dict(st.secrets["gcp_service_account"])
+    raw_secret = st.secrets["gcp_service_account"]
+    creds = json.loads(raw_secret)
+
     with tempfile.NamedTemporaryFile(
         mode="w",
         suffix=".json",
@@ -415,6 +349,7 @@ def engineer_prompts(user_input: str):
 def run_single_agent(project_id: str, region: str, model: str, prompt_text: str, max_tokens: int):
     local_client = build_client(project_id, region)
     full = ""
+
     with local_client.messages.stream(
         model=model,
         max_tokens=max_tokens,
@@ -422,6 +357,7 @@ def run_single_agent(project_id: str, region: str, model: str, prompt_text: str,
     ) as stream:
         for text_chunk in stream.text_stream:
             full += text_chunk
+
     return full
 
 
@@ -486,12 +422,13 @@ if "pdf_text" not in st.session_state:
 if "pdf_name" not in st.session_state:
     st.session_state.pdf_name = ""
 
+
 with st.sidebar:
     st.title("💬 Said AI")
 
     project_id = st.text_input(
         "Project ID",
-        value="gemini-projectsaid01",
+        value="gen-lang-client-0753032603",
         help="معرف مشروع Google Cloud",
     )
 
@@ -543,15 +480,15 @@ with st.sidebar:
 
     st.markdown("---")
 
-    c_sidebar1, c_sidebar2 = st.columns(2)
-    with c_sidebar1:
+    c1, c2 = st.columns(2)
+    with c1:
         if st.button("➕ محادثة جديدة", use_container_width=True):
             st.session_state.messages = []
             st.session_state.current_chat_id = None
             gc.collect()
             st.rerun()
 
-    with c_sidebar2:
+    with c2:
         if st.button("🗑️ مسح الحالية", use_container_width=True):
             st.session_state.messages = []
             st.session_state.current_chat_id = None
@@ -585,14 +522,14 @@ with st.sidebar:
         selected_label = st.selectbox("اختر محادثة", options=list(options.keys()))
         selected_chat_id = options[selected_label]
 
-        c1, c2 = st.columns(2)
-        with c1:
+        c3, c4 = st.columns(2)
+        with c3:
             if st.button("📂 فتح", use_container_width=True):
                 st.session_state.messages = load_chat(selected_chat_id)
                 st.session_state.current_chat_id = selected_chat_id
                 st.rerun()
 
-        with c2:
+        with c4:
             if st.button("❌ حذف", use_container_width=True):
                 if delete_chat(selected_chat_id):
                     if st.session_state.current_chat_id == selected_chat_id:
@@ -602,6 +539,7 @@ with st.sidebar:
                     st.rerun()
     else:
         st.caption("لا توجد محادثات محفوظة بعد")
+
 
 st.markdown('<div class="app-title">🤖 Said AI</div>', unsafe_allow_html=True)
 st.markdown(
