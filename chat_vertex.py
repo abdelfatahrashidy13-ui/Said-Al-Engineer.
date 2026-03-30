@@ -304,8 +304,23 @@ def write_service_account_to_tempfile() -> str | None:
     if "gcp_service_account" not in st.secrets:
         return None
 
-    # الحل هنا: نحول AttrDict إلى dict عادي
     creds = dict(st.secrets["gcp_service_account"])
+
+    required_keys = [
+        "type",
+        "project_id",
+        "private_key_id",
+        "private_key",
+        "client_email",
+        "client_id",
+        "auth_uri",
+        "token_uri",
+        "auth_provider_x509_cert_url",
+        "client_x509_cert_url",
+    ]
+    missing = [k for k in required_keys if k not in creds]
+    if missing:
+        raise ValueError(f"حقول ناقصة في gcp_service_account: {missing}")
 
     with tempfile.NamedTemporaryFile(
         mode="w",
@@ -706,4 +721,4 @@ if prompt:
     st.session_state.current_chat_id = save_chat(
         st.session_state.messages,
         st.session_state.current_chat_id,
-)
+    )
